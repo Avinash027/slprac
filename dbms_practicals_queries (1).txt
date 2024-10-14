@@ -1,0 +1,310 @@
+
+### Practical 1: SQL Queries (Insert, Select, Update, Delete)
+
+-- Creating tables for Practical 1
+CREATE TABLE Account (
+  Acc_no INT PRIMARY KEY,
+  branch_name VARCHAR(255),
+  balance DECIMAL(10, 2)
+);
+
+CREATE TABLE Branch (
+  branch_name VARCHAR(255) PRIMARY KEY,
+  branch_city VARCHAR(255),
+  assets DECIMAL(15, 2)
+);
+
+CREATE TABLE Customer (
+  cust_name VARCHAR(255) PRIMARY KEY,
+  cust_street VARCHAR(255),
+  cust_city VARCHAR(255)
+);
+
+CREATE TABLE Depositor (
+  cust_name VARCHAR(255),
+  acc_no INT,
+  FOREIGN KEY (cust_name) REFERENCES Customer(cust_name),
+  FOREIGN KEY (acc_no) REFERENCES Account(Acc_no)
+);
+
+CREATE TABLE Loan (
+  loan_no INT PRIMARY KEY,
+  branch_name VARCHAR(255),
+  amount DECIMAL(10, 2),
+  FOREIGN KEY (branch_name) REFERENCES Branch(branch_name)
+);
+
+CREATE TABLE Borrower (
+  cust_name VARCHAR(255),
+  loan_no INT,
+  FOREIGN KEY (cust_name) REFERENCES Customer(cust_name),
+  FOREIGN KEY (loan_no) REFERENCES Loan(loan_no)
+);
+
+-- Sample Insertions
+INSERT INTO Account VALUES (1, 'Akurdi', 5000.00);
+INSERT INTO Branch VALUES ('Akurdi', 'Pune', 200000.00);
+INSERT INTO Customer VALUES ('John Doe', 'Main St', 'Pune');
+INSERT INTO Depositor VALUES ('John Doe', 1);
+INSERT INTO Loan VALUES (1001, 'Akurdi', 15000.00);
+INSERT INTO Borrower VALUES ('John Doe', 1001);
+
+-- Queries
+-- Q1. Find the names of all branches in loan relation.
+SELECT DISTINCT branch_name FROM Loan;
+
+-- Q2. Find all loan numbers for loans made at Akurdi Branch with loan amount > 12000.
+SELECT loan_no FROM Loan WHERE branch_name = 'Akurdi' AND amount > 12000;
+
+-- Q3. Find all customers who have a loan from bank. Find their names, loan_no, and loan amount.
+SELECT Borrower.cust_name, Borrower.loan_no, Loan.amount 
+FROM Borrower 
+JOIN Loan ON Borrower.loan_no = Loan.loan_no;
+
+-- Q4. List all customers in alphabetical order who have a loan from Akurdi branch.
+SELECT Customer.cust_name 
+FROM Customer 
+JOIN Borrower ON Customer.cust_name = Borrower.cust_name
+JOIN Loan ON Borrower.loan_no = Loan.loan_no
+WHERE Loan.branch_name = 'Akurdi'
+ORDER BY Customer.cust_name;
+
+-- Q5. Find all customers who have an account or loan or both at the bank.
+SELECT Customer.cust_name FROM Customer 
+WHERE cust_name IN (SELECT cust_name FROM Depositor)
+OR cust_name IN (SELECT cust_name FROM Borrower);
+
+-- More queries will follow for the remaining practicals...
+
+
+
+
+### Practical 2: SQL Queries (Join, Sub-query, View)
+
+-- Creating tables for Practical 2
+CREATE TABLE cust_mstr (
+  cust_no INT PRIMARY KEY,
+  fname VARCHAR(255),
+  lname VARCHAR(255)
+);
+
+CREATE TABLE add_dets (
+  code_no INT PRIMARY KEY,
+  add1 VARCHAR(255),
+  add2 VARCHAR(255),
+  state VARCHAR(255),
+  city VARCHAR(255),
+  pincode INT
+);
+
+CREATE TABLE acc_fd_cust_dets (
+  codeno INT PRIMARY KEY,
+  acc_fd_no INT
+);
+
+CREATE TABLE fd_dets (
+  fd_sr_no INT PRIMARY KEY,
+  amt DECIMAL(10, 2)
+);
+
+CREATE TABLE emp_mstr (
+  emp_no INT PRIMARY KEY,
+  f_name VARCHAR(255),
+  l_name VARCHAR(255),
+  m_name VARCHAR(255),
+  dept VARCHAR(255),
+  desg VARCHAR(255),
+  branch_no INT
+);
+
+CREATE TABLE branch_mstr (
+  name VARCHAR(255),
+  b_no INT PRIMARY KEY
+);
+
+-- Sample Insertions
+INSERT INTO cust_mstr VALUES (1, 'John', 'Doe');
+INSERT INTO add_dets VALUES (1, '123 Main St', 'Apt 4', 'Maharashtra', 'Pune', 411001);
+INSERT INTO acc_fd_cust_dets VALUES (1, 101);
+INSERT INTO fd_dets VALUES (101, 10000);
+INSERT INTO emp_mstr VALUES (1, 'Jane', 'Smith', 'A', 'HR', 'Manager', 1);
+INSERT INTO branch_mstr VALUES ('HR', 1);
+
+-- Queries
+-- Q1. Retrieve the address of customer Fname as 'xyz' and Lname as 'pqr'.
+SELECT add1, add2, city FROM cust_mstr 
+JOIN add_dets ON cust_mstr.cust_no = add_dets.code_no 
+WHERE fname = 'xyz' AND lname = 'pqr';
+
+-- Q2. List the customer holding fixed deposit of amount more than 5000.
+SELECT cust_mstr.fname, cust_mstr.lname, fd_dets.amt FROM cust_mstr
+JOIN acc_fd_cust_dets ON cust_mstr.cust_no = acc_fd_cust_dets.codeno
+JOIN fd_dets ON acc_fd_cust_dets.acc_fd_no = fd_dets.fd_sr_no
+WHERE fd_dets.amt > 5000;
+
+-- Q3. List the employee details along with branch names to which they belong.
+SELECT emp_mstr.f_name, emp_mstr.l_name, branch_mstr.name FROM emp_mstr
+JOIN branch_mstr ON emp_mstr.branch_no = branch_mstr.b_no;
+
+-- Views
+-- Creating a view
+CREATE VIEW BorrowerView AS 
+SELECT borrower.cust_name, borrower.loan_no 
+FROM borrower
+JOIN loan ON borrower.loan_no = loan.loan_no
+WHERE loan.amount > 10000;
+
+-- Using the view
+SELECT * FROM BorrowerView;
+
+
+
+### Practical 3: MongoDB CRUD Queries
+
+-- Creating a MongoDB Database and Collections
+use DYPIEMR;
+
+-- Inserting documents into collections
+db.Teachers.insertMany([
+  { Tname: "Praveen", dno: 1, dname: "Computer", experience: 5, salary: 30000, date_of_joining: "2017-06-15" },
+  { Tname: "Suresh", dno: 2, dname: "IT", experience: 10, salary: 40000, date_of_joining: "2013-04-20" }
+]);
+
+db.Students.insertMany([
+  { Sname: "John", roll_no: 1, class: "TE" },
+  { Sname: "Alice", roll_no: 2, class: "TE" }
+]);
+
+-- Query 1: Find all teachers
+db.Teachers.find().pretty();
+
+-- Query 2: Find all teachers of the Computer department
+db.Teachers.find({ dname: "Computer" }).pretty();
+
+-- More MongoDB CRUD Queries
+-- Query 3: Find all teachers in the Computer, IT, and E&TC departments with salary >= 10000
+db.Teachers.find({ dname: { $in: ["Computer", "IT", "E&TC"] }, salary: { $gte: 10000 } }).pretty();
+
+-- Query 4: Update teacher "Praveen" to 10 years of experience (if not present, insert it)
+db.Teachers.update({ Tname: "Praveen" }, { $set: { experience: 10 } }, { upsert: true });
+
+-- Query 5: Delete all teachers from the IT department
+db.Teachers.remove({ dname: "IT" });
+
+-- Query 6: Use pretty() to display the first 3 documents in ascending order by date_of_joining
+db.Teachers.find().sort({ date_of_joining: 1 }).limit(3).pretty();
+
+
+
+
+
+
+### Practical 4: PL/SQL Code (Control Structure and Exception Handling)
+
+-- PL/SQL Block for Practical 4
+DECLARE
+  v_roll_no INT := 1;
+  v_att INT := 80;
+BEGIN
+  IF v_att < 75 THEN
+    DBMS_OUTPUT.PUT_LINE('Term not granted');
+    UPDATE stud SET status = 'D' WHERE roll_no = v_roll_no;
+  ELSE
+    DBMS_OUTPUT.PUT_LINE('Term granted');
+    UPDATE stud SET status = 'ND' WHERE roll_no = v_roll_no;
+  END IF;
+EXCEPTION
+  WHEN OTHERS THEN
+    DBMS_OUTPUT.PUT_LINE('An error occurred');
+END;
+
+### Practical 5: PL/SQL Cursors
+
+-- PL/SQL block using cursors for Practical 5
+DECLARE
+  CURSOR c1 IS SELECT e_no, salary FROM emp WHERE salary < 5000;
+  v_e_no emp.e_no%TYPE;
+  v_salary emp.salary%TYPE;
+BEGIN
+  OPEN c1;
+  LOOP
+    FETCH c1 INTO v_e_no, v_salary;
+    EXIT WHEN c1%NOTFOUND;
+    DBMS_OUTPUT.PUT_LINE('Employee: ' || v_e_no || ', Salary: ' || v_salary);
+  END LOOP;
+  CLOSE c1;
+END;
+
+
+
+
+### Practical 6: MySQL/Oracle Database Connectivity
+
+-- Example code for database connectivity (in Java for illustration)
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.Statement;
+
+public class DatabaseConnect {
+  public static void main(String[] args) {
+    try {
+      Connection con = DriverManager.getConnection("jdbc:mysql://localhost:3306/dypiemr", "root", "password");
+      Statement stmt = con.createStatement();
+      String query = "INSERT INTO Students (Sname, roll_no, class) VALUES ('John', 1, 'TE')";
+      stmt.executeUpdate(query);
+      System.out.println("Record inserted successfully");
+    } catch (Exception e) {
+      System.out.println(e);
+    }
+  }
+}
+
+
+
+
+### Practical 6: PL/SQL Code Using Cursors (Missing Practical)
+
+-- PL/SQL Block using Implicit, Explicit Cursors and Parameterized Cursor
+
+-- Implicit Cursor Example: Activating inactive accounts
+DECLARE
+  v_inactive_count INT;
+BEGIN
+  UPDATE account SET status = 'active' WHERE last_transaction_date < SYSDATE - 365;
+  v_inactive_count := SQL%ROWCOUNT;
+  DBMS_OUTPUT.PUT_LINE(v_inactive_count || ' accounts have been activated.');
+END;
+
+-- Explicit Cursor Example: Increment salary for employees with less than average salary
+DECLARE
+  CURSOR emp_cursor IS SELECT e_no, salary FROM emp WHERE salary < (SELECT AVG(salary) FROM emp);
+  v_e_no emp.e_no%TYPE;
+  v_salary emp.salary%TYPE;
+BEGIN
+  OPEN emp_cursor;
+  LOOP
+    FETCH emp_cursor INTO v_e_no, v_salary;
+    EXIT WHEN emp_cursor%NOTFOUND;
+    DBMS_OUTPUT.PUT_LINE('Employee No: ' || v_e_no || ' Current Salary: ' || v_salary);
+    -- Logic to increase salary by 10%
+    UPDATE emp SET salary = v_salary * 1.1 WHERE e_no = v_e_no;
+    DBMS_OUTPUT.PUT_LINE('Salary updated to: ' || (v_salary * 1.1));
+  END LOOP;
+  CLOSE emp_cursor;
+END;
+
+-- Parameterized Cursor Example: Department-wise average salary calculation
+DECLARE
+  CURSOR dept_cursor(p_dno emp.d_no%TYPE) IS
+    SELECT AVG(salary) FROM emp WHERE d_no = p_dno;
+  v_avg_salary emp.salary%TYPE;
+BEGIN
+  FOR dept IN (SELECT DISTINCT d_no FROM emp) LOOP
+    OPEN dept_cursor(dept.d_no);
+    FETCH dept_cursor INTO v_avg_salary;
+    INSERT INTO dept_salary (d_no, avg_salary) VALUES (dept.d_no, v_avg_salary);
+    CLOSE dept_cursor;
+  END LOOP;
+END;
+
+
